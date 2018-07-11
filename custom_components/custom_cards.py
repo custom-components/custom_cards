@@ -11,11 +11,10 @@ from datetime import timedelta
 
 import requests
 import voluptuous as vol
-import yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '0.0.1'
+__version__ = '1.0.0'
 
 DOMAIN = 'custom_cards'
 CONF_AUTO_UPDATE = 'auto_update'
@@ -30,6 +29,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 _LOGGER = logging.getLogger(__name__)
 
+BASE_URL = 'https://raw.githubusercontent.com/'
+REPO = 'ciotlosm/custom-lovelace/master/'
+BASE_REPO = BASE_URL + REPO
 
 def setup(hass, config):
     """Set up the component."""
@@ -40,52 +42,99 @@ def setup(hass, config):
 
     def update_cards_interval(now):
         """Set up recuring update."""
-        _update_cards(www_dir, lovelace_config)
+        _update_cards(www_dir, lovelace_config, 'auto', auto_update)
 
     def update_cards_service(now):
         """Set up service for manual trigger."""
-        _update_cards(www_dir, lovelace_config)
+        _update_cards(www_dir, lovelace_config, 'manual', auto_update)
 
-    if auto_update == 'True':
         track_time_interval(hass, update_cards_interval, INTERVAL)
     hass.services.register(
         DOMAIN, 'update_cards', update_cards_service)
     return True
 
-def _update_cards(www_dir, lovelace_config):
+def _update_cards(www_dir, lovelace_config, update, auto_update):
     """DocString"""
-    url = 'None'
+    cards = get_installed_cards(www_dir)
+    if cards != None:
+        for card in cards:
+            localversion = get_local_version(card, lovelace_config)
+            if localversion != False:
+                remoteversion = get_remote_version(card)
+                if remoteversion != False:
+                    if localversion != remoteversion:
+                        if auto_update == 'True':
+                            update = 'manual'
+                        if update == 'manual':
+                            download_card(card, www_dir)
+                            update_config(lovelace_config, card, localversion, remoteversion)
+                            _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, localversion, remoteversion)
+                        else:
+                            _LOGGER.info("Version %s is available for %s run the service 'custom_cards.update_cards' to upgrade, or visit %s to download manually", remoteversion, card, BASE_REPO)
+                    else:
+                        _LOGGER.debug('Skipping upgrade of card %s', card)
+                else:
+                    _LOGGER.debug('Skipping upgrade of card %s', card)
+            else:
+                _LOGGER.debug('Skipping upgrade of card %s', card)
+
+def get_installed_cards(www_dir):
+    """Get all cards in www dir"""
+    _LOGGER.debug('Checking for installed cards in  %s', www_dir)
+    cards = []
     for file in os.listdir(www_dir):
         if file.endswith(".js"):
-            card = file.split('.')[0]
-            _LOGGER.debug('Downloading new version of %s', card)
-            downloadurl = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/' + card + '/' + card + '.js'
-            response = requests.get(downloadurl)
-            if response.status_code == 200:
-                with open(www_dir + card + '.js', 'wb') as f:
-                    f.write(response.content)
-                _LOGGER.debug('Trying to update ui-lovelace.yaml for %s', card)
-                f = open(lovelace_config)
-                lovelace = yaml.safe_load(f)
-                f.close()
-                num = 0
-                for items in lovelace['resources']:
-                    string = lovelace['resources'][num]['url']
-                    if str(card) in str(string):
-                        _LOGGER.debug('Found %s in %s', card, string)
-                        url = string
-                        if '=' in str(url):
-                            version = url.split('=')[1][0:1]
-                            newversion = int(version) + 1
-                            sedcmd = 's/\/'+ card + '.js?v=' + str(version) + '/\/'+ card + '.js?v=' + str(newversion) + '/'
-                            _LOGGER.debug('upgrading card in config from version %s to version %s', version, newversion)
-                            subprocess.call(["sed", "-i", "-e", sedcmd, lovelace_config])
-                        else:
-                            _LOGGER.debug('Nothing to update, version not set.')
-                        break
-                    else:
-                        num = num + 1
-                _LOGGER.debug('%s update sucessful...', card)
+            cards.append(file.split('.')[0])
+    if len(cards):
+        _LOGGER.debug('These cards where found: %s', cards)
+        cards = cards
+    else:
+        _LOGGER.debug('No cards where found. %s', cards)
+        cards = None
+    return cards
 
-            else:
-                _LOGGER.debug('%s not found on remote repo, skipping update...', card)
+def get_remote_version(card):
+    """Return the remote version if any."""
+    _LOGGER.debug('Checking remote version of %s', card)
+    remoteversion = BASE_REPO + card + '/VERSION'
+    response = requests.get(remoteversion)
+    if response.status_code == 200:
+        remoteversion = response.text
+        _LOGGER.debug('Remote version is %s', remoteversion)
+        remoteversion = remoteversion
+    else:
+        _LOGGER.debug('Could not get the remote version for %s', card)
+        remoteversion = False
+    return remoteversion
+
+def get_local_version(card, lovelace_config):
+    """Return the local version if any."""
+    _LOGGER.debug('Checking local version of %s', card)
+    with open(lovelace_config, 'r') as local:
+        for line in local.readlines():
+            if '/' + card + '.js' in line:
+                cardconfig = line
+                break
+    if '=' in cardconfig:
+        localversion = cardconfig.split('=')[1].split('\n')[0]
+        _LOGGER.debug('Local version is %s', localversion)
+        return localversion
+    else:
+        _LOGGER.debug('Could not get the local version for %s', card)
+        return False
+
+def download_card(card, www_dir):
+    """Downloading new card"""
+    _LOGGER.debug('Downloading new version of %s', card)
+    downloadurl = BASE_REPO + card + '/' + card + '.js'
+    response = requests.get(downloadurl)
+    if response.status_code == 200:
+        with open(www_dir + card + '.js', 'wb') as card_file:
+            card_file.write(response.content)
+
+def update_config(lovelace_config, card, localversion, remoteversion):
+    """Updating the ui-lovelace file"""
+    _LOGGER.debug('Updating configuration for %s', card)
+    sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
+    _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
+    subprocess.call(["sed", "-i", "-e", sedcmd, lovelace_config])
