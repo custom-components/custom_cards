@@ -13,7 +13,7 @@ here: `<config directory>/custom_components/custom_cards.py`
 
 ```yaml
 custom_cards:
-  auto_update: 'True'
+  auto_update: 'False'
 ```
 
 **Configuration variables:**  
