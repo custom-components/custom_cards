@@ -72,10 +72,8 @@ def _update_cards(www_dir, lovelace_config):
                 for items in lovelace['resources']:
                     string = lovelace['resources'][num]['url']
                     if str(card) in str(string):
-                        _LOGGER.debug('Found %s in string', card)
-                        _LOGGER.debug(string)
+                        _LOGGER.debug('Found %s in %s', card, string)
                         url = string
-                        _LOGGER.debug('Found %s in config, trying to update...', url)
                         if '=' in str(url):
                             version = url.split('=')[1][0:1]
                             newversion = int(version) + 1
