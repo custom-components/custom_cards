@@ -62,7 +62,7 @@ def _update_cards(www_dir, lovelace_config, update_type, auto_update, data_card)
     if data_card == None:
         cards = get_installed_cards(www_dir)
     else:
-        cards = data_card
+        cards = [data_card]
     if cards != None:
         for card in cards:
             localversion = get_local_version(card, lovelace_config)
