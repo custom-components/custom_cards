@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 DOMAIN = 'custom_cards'
 CONF_AUTO_UPDATE = 'auto_update'
@@ -60,14 +60,14 @@ def setup(hass, config):
 def _update_cards(www_dir, lovelace_config, data_card, force_update):
     """Update cards."""
     if data_card == None:
-        cards = get_installed_cards(www_dir)
+        cards = get_installed_cards(www_dir, lovelace_config)
     else:
         cards = [data_card]
     if cards != None:
         for card in cards:
             localversion = get_local_version(card, lovelace_config)
             remoteversion = get_remote_version(card)
-            if localversion != False and remoteversion != False and localversion != remoteversion:
+            if localversion != False and remoteversion != False and remoteversion > localversion:
                 if force_update:
                     download_card(card, www_dir)
                     update_config(lovelace_config, card, localversion, remoteversion)
@@ -75,31 +75,39 @@ def _update_cards(www_dir, lovelace_config, data_card, force_update):
                 else:
                     _LOGGER.info("Version %s is available for %s (currently version %s). Please run the service 'custom_cards.update_cards' to upgrade, or visit %s%s/%s.js to download manually", remoteversion, card, localversion, BASE_REPO, card, card)
             else:
-                _LOGGER.debug('Skipping upgrade of card %s', card)
+                _LOGGER.debug('Card %s is version %s and remote is version %s, skipping update..', card, localversion, remoteversion)
 
-def get_installed_cards(www_dir):
-    """Get all cards in www dir"""
+def get_installed_cards(www_dir, lovelace_config):
+    """Get all cards in use from the www dir"""
     _LOGGER.debug('Checking for installed cards in  %s', www_dir)
     cards = []
+    cards_in_use = []
     for file in os.listdir(www_dir):
         if file.endswith(".js"):
             cards.append(file.split('.')[0])
     if len(cards):
-        _LOGGER.debug('These cards where found: %s in %s', cards, www_dir)
         cards = cards
+        _LOGGER.debug('Checking which cards that are in use in ui-lovelace.yaml')
+        for card in cards:
+            with open(lovelace_config, 'r') as local:
+                for line in local.readlines():
+                    if '/' + card + '.js' in line:
+                        cardconfig = line
+                        cards_in_use.append(card)
+                        break
+        _LOGGER.debug('These cards where found: %s', cards_in_use)
     else:
         _LOGGER.debug('No cards where found. %s', cards)
-        cards = None
-    return cards
+        cards_in_use = None
+    return cards_in_use
 
 def get_remote_version(card):
     """Return the remote version if any."""
-    _LOGGER.debug('Checking remote version of %s', card)
     remoteversion = BASE_REPO + card + '/VERSION'
     response = requests.get(remoteversion)
     if response.status_code == 200:
         remoteversion = response.text
-        _LOGGER.debug('Remote version is %s', remoteversion)
+        _LOGGER.debug('Remote version of %s is %s', card, remoteversion)
         remoteversion = remoteversion
     else:
         _LOGGER.debug('Could not get the remote version for %s', card)
@@ -108,19 +116,15 @@ def get_remote_version(card):
 
 def get_local_version(card, lovelace_config):
     """Return the local version if any."""
-    _LOGGER.debug('Checking local version of %s', card)
     cardconfig = None
     with open(lovelace_config, 'r') as local:
         for line in local.readlines():
             if '/' + card + '.js' in line:
                 cardconfig = line
                 break
-    if cardconfig == None:
-        _LOGGER.warning('Local card %s unused. Please consider removing from your %s', card, lovelace_config)
-        return False
     if '=' in cardconfig:
         localversion = cardconfig.split('=')[1].split('\n')[0]
-        _LOGGER.debug('Local version is %s', localversion)
+        _LOGGER.debug('Local version of %s is %s', card, localversion)
         return localversion
     else:
         _LOGGER.debug('Could not get the local version for %s', card)
