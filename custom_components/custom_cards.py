@@ -22,7 +22,7 @@ CONF_CARDS = 'cards'
 
 ATTR_CARD = 'card'
 
-INTERVAL = timedelta(seconds=10)
+INTERVAL = timedelta(minutes=60)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
