@@ -32,9 +32,9 @@ custom_cards:
 In your `configuration.yaml`
 ```yaml
 logger:
-  default: info
+  default: warn
   logs:
-    homeassistant.custom_components.custom_cards: debug
+    custom_components.custom_cards: debug
 ```
 
 ## Update single card
