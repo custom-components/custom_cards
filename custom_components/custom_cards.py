@@ -14,10 +14,12 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 DOMAIN = 'custom_cards'
 CONF_AUTO_UPDATE = 'auto_update'
+
+ATTR_CARD = 'card'
 
 INTERVAL = timedelta(minutes=60)
 
@@ -39,23 +41,28 @@ def setup(hass, config):
     auto_update = config[DOMAIN][CONF_AUTO_UPDATE]
     www_dir = str(hass.config.path("www/"))
     lovelace_config = str(hass.config.path("ui-lovelace.yaml"))
+    data_card = None
 
     def update_cards_interval(now):
         """Set up recuring update."""
-        _update_cards(www_dir, lovelace_config, 'auto', auto_update)
+        _update_cards(www_dir, lovelace_config, 'auto', auto_update, data_card)
 
-    def update_cards_service(now):
+    def update_cards_service(call):
         """Set up service for manual trigger."""
-        _update_cards(www_dir, lovelace_config, 'manual', auto_update)
+        data_card = call.data.get(ATTR_CARD)
+        _update_cards(www_dir, lovelace_config, 'manual', auto_update, data_card)
 
         track_time_interval(hass, update_cards_interval, INTERVAL)
     hass.services.register(
         DOMAIN, 'update_cards', update_cards_service)
     return True
 
-def _update_cards(www_dir, lovelace_config, update, auto_update):
+def _update_cards(www_dir, lovelace_config, update, auto_update, data_card):
     """DocString"""
-    cards = get_installed_cards(www_dir)
+    if data_card == None:
+        cards = get_installed_cards(www_dir)
+    else:
+        cards = data_card
     if cards != None:
         for card in cards:
             localversion = get_local_version(card, lovelace_config)

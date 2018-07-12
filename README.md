@@ -21,3 +21,23 @@ key | description
 **auto_update (Optional)** | Activate auto update of custom_cards, can be `'True'`/`'False'`, default is `'False'`.
 
 ## It is strongly adviced to not have this auto update
+
+
+## Update single card
+
+You can update a single card by passing which card you want to update to the  `custom_cards.update_cards` service.
+
+## From dev-service
+
+![singlecard](bin/single_card.png)
+
+Service:
+`custom_cards.update_cards`
+
+Service Data:
+
+```json
+{
+  "card":"monster-card"
+}
+```
