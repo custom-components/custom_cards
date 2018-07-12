@@ -125,9 +125,6 @@ def get_local_version(card, lovelace_config):
             if '/' + card + '.js' in line:
                 cardconfig = line
                 break
-    if cardconfig == None:
-        _LOGGER.warning('Local card %s unused. Please consider removing from your %s', card, lovelace_config)
-        return False
     if '=' in cardconfig:
         localversion = cardconfig.split('=')[1].split('\n')[0]
         _LOGGER.debug('Local version of %s is %s', card, localversion)
