@@ -14,11 +14,10 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '1.1.3'
+__version__ = '1.1.5'
 
 DOMAIN = 'custom_cards'
 CONF_AUTO_UPDATE = 'auto_update'
-CONF_CARDS = 'cards'
 
 ATTR_CARD = 'card'
 
@@ -27,8 +26,6 @@ INTERVAL = timedelta(minutes=60)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTO_UPDATE, default=False): cv.boolean,
-        vol.Optional(CONF_CARDS, default='None'):
-            vol.All(cv.ensure_list, [cv.string]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -39,34 +36,34 @@ REPO = 'ciotlosm/custom-lovelace/master/'
 BROWSE_REPO = 'https//github.com/' + REPO
 BASE_REPO = BASE_URL + REPO
 
+
 def setup(hass, config):
     """Set up the component."""
     _LOGGER.info('version %s is starting, if you have ANY issues with this, please report them here: https://github.com/custom-components/%s', __version__, __name__.split('.')[1])
     auto_update = config[DOMAIN][CONF_AUTO_UPDATE]
-    card_list = config[DOMAIN][CONF_CARDS]
     www_dir = str(hass.config.path("www/"))
     lovelace_config = str(hass.config.path("ui-lovelace.yaml"))
     data_card = None
 
     def update_cards_interval(now):
         """Set up recuring update."""
-        _update_cards(www_dir, lovelace_config, data_card, card_list, auto_update)
+        _update_cards(www_dir, lovelace_config, data_card, auto_update)
 
     def update_cards_service(call):
         """Set up service for manual trigger."""
         data_card = call.data.get(ATTR_CARD)
-        _update_cards(www_dir, lovelace_config, data_card, card_list, True)
+        _update_cards(www_dir, lovelace_config, data_card, True)
 
     track_time_interval(hass, update_cards_interval, INTERVAL)
     hass.services.register(
         DOMAIN, 'update_cards', update_cards_service)
     return True
 
-def _update_cards(www_dir, lovelace_config, data_card, card_list, force_update):
+def _update_cards(www_dir, lovelace_config, data_card, force_update):
     """Update cards."""
     updates = []
     if data_card == None:
-        cards = get_installed_cards(www_dir, lovelace_config, card_list)
+        cards = get_installed_cards(www_dir, lovelace_config)
     else:
         cards = [data_card]
     if cards != None:
@@ -80,13 +77,12 @@ def _update_cards(www_dir, lovelace_config, data_card, card_list, force_update):
                     _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, localversion, remoteversion)
                 else:
                     updates.append(card + ' (' + localversion + '|' +remoteversion + ')')
-                    #_LOGGER.info("Version %s is available for %s (currently version %s). Please run the service 'custom_cards.update_cards' to upgrade, or visit %s%s/%s.js to download manually", remoteversion, card, localversion, BASE_REPO, card, card)
             else:
                 _LOGGER.debug('Card %s is version %s and remote is version %s, skipping update..', card, localversion, remoteversion)
         if updates:
             _LOGGER.info("Available updates found for cards (localversion|remoteversion) %s. Please run the service 'custom_cards.update_cards' to upgrade, or visit %s to download manually", updates, BROWSE_REPO)
 
-def get_installed_cards(www_dir, lovelace_config, card_list):
+def get_installed_cards(www_dir, lovelace_config):
     """Get all cards in use from the www dir"""
     _LOGGER.debug('Checking for installed cards in  %s', www_dir)
     cards = []
@@ -100,8 +96,7 @@ def get_installed_cards(www_dir, lovelace_config, card_list):
             with open(lovelace_config, 'r') as local:
                 for line in local.readlines():
                     if '/' + card + '.js' in line:
-                        if card in card_list or card_list[0] == 'None':
-                            cards_in_use.append(card)
+                        cards_in_use.append(card)
                         break
         _LOGGER.debug('These cards where found: %s', cards_in_use)
     else:
