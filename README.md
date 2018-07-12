@@ -15,7 +15,7 @@ here: `<config directory>/custom_components/custom_cards.py`
   
 | key | default | required | description
 | --- | --- | --- | ---
-| **auto_update** | 'False' | no | Activate auto update of custom_cards, can be `'True'`/`'False'`
+| **auto_update** | False | no | Activate auto update of custom_cards, can be `True`/`False`
 
 ☢️ It is strongly adviced to not have this auto update
 
@@ -24,7 +24,7 @@ here: `<config directory>/custom_components/custom_cards.py`
 In your `configuration.yaml`:
 ```yaml
 custom_cards:
-  auto_update: 'False'
+  auto_update: False
 ```
 
 ## Debug logging
