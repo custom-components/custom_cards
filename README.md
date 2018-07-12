@@ -16,6 +16,7 @@ here: `<config directory>/custom_components/custom_cards.py`
 | key | default | required | description
 | --- | --- | --- | ---
 | **auto_update** | False | no | Activate auto update of custom_cards, can be `True`/`False`
+| **cards** | None | no | A list of cards you want to monitor.
 
 ☢️ It is strongly adviced to not have this auto update
 
@@ -25,6 +26,8 @@ In your `configuration.yaml`:
 ```yaml
 custom_cards:
   auto_update: False
+  cards:
+    - monster-card
 ```
 
 ## Debug logging
