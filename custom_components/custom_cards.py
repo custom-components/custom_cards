@@ -25,7 +25,7 @@ INTERVAL = timedelta(minutes=60)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_AUTO_UPDATE, default='False'): cv.string,
+        vol.Optional(CONF_AUTO_UPDATE, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -45,20 +45,20 @@ def setup(hass, config):
 
     def update_cards_interval(now):
         """Set up recuring update."""
-        _update_cards(www_dir, lovelace_config, 'auto', auto_update, data_card)
+        _update_cards(www_dir, lovelace_config, data_card, auto_update)
 
     def update_cards_service(call):
         """Set up service for manual trigger."""
         data_card = call.data.get(ATTR_CARD)
-        _update_cards(www_dir, lovelace_config, 'manual', auto_update, data_card)
+        _update_cards(www_dir, lovelace_config, data_card, True)
 
-        track_time_interval(hass, update_cards_interval, INTERVAL)
+    track_time_interval(hass, update_cards_interval, INTERVAL)
     hass.services.register(
         DOMAIN, 'update_cards', update_cards_service)
     return True
 
-def _update_cards(www_dir, lovelace_config, update_type, auto_update, data_card):
-    """DocString"""
+def _update_cards(www_dir, lovelace_config, data_card, force_update):
+    """Update cards."""
     if data_card == None:
         cards = get_installed_cards(www_dir)
     else:
@@ -66,22 +66,14 @@ def _update_cards(www_dir, lovelace_config, update_type, auto_update, data_card)
     if cards != None:
         for card in cards:
             localversion = get_local_version(card, lovelace_config)
-            if localversion != False:
-                remoteversion = get_remote_version(card)
-                if remoteversion != False:
-                    if localversion != remoteversion:
-                        if auto_update == 'True':
-                            update_type = 'manual'
-                        if update_type == 'manual':
-                            download_card(card, www_dir)
-                            update_config(lovelace_config, card, localversion, remoteversion)
-                            _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, localversion, remoteversion)
-                        else:
-                            _LOGGER.info("Version %s is available for %s run the service 'custom_cards.update_cards' to upgrade, or visit %s to download manually", remoteversion, card, BASE_REPO)
-                    else:
-                        _LOGGER.debug('Skipping upgrade of card %s', card)
+            remoteversion = get_remote_version(card)
+            if localversion != False and remoteversion != False and localversion != remoteversion:
+                if force_update:
+                    download_card(card, www_dir)
+                    update_config(lovelace_config, card, localversion, remoteversion)
+                    _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, localversion, remoteversion)
                 else:
-                    _LOGGER.debug('Skipping upgrade of card %s', card)
+                    _LOGGER.info("Version %s is available for %s (currently version %s). Please run the service 'custom_cards.update_cards' to upgrade, or visit %s%s/%s.js to download manually", remoteversion, card, localversion, BASE_REPO, card, card)
             else:
                 _LOGGER.debug('Skipping upgrade of card %s', card)
 
@@ -93,7 +85,7 @@ def get_installed_cards(www_dir):
         if file.endswith(".js"):
             cards.append(file.split('.')[0])
     if len(cards):
-        _LOGGER.debug('These cards where found: %s', cards)
+        _LOGGER.debug('These cards where found: %s in %s', cards, www_dir)
         cards = cards
     else:
         _LOGGER.debug('No cards where found. %s', cards)
@@ -117,11 +109,15 @@ def get_remote_version(card):
 def get_local_version(card, lovelace_config):
     """Return the local version if any."""
     _LOGGER.debug('Checking local version of %s', card)
+    cardconfig = None
     with open(lovelace_config, 'r') as local:
         for line in local.readlines():
             if '/' + card + '.js' in line:
                 cardconfig = line
                 break
+    if cardconfig == None:
+        _LOGGER.warning('Local card %s unused. Please consider removing from your %s', card, lovelace_config)
+        return False
     if '=' in cardconfig:
         localversion = cardconfig.split('=')[1].split('\n')[0]
         _LOGGER.debug('Local version is %s', localversion)
