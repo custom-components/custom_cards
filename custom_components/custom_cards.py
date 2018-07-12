@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 DOMAIN = 'custom_cards'
 CONF_AUTO_UPDATE = 'auto_update'
@@ -86,7 +86,6 @@ def get_installed_cards(www_dir, lovelace_config):
         if file.endswith(".js"):
             cards.append(file.split('.')[0])
     if len(cards):
-        cards = cards
         _LOGGER.debug('Checking which cards that are in use in ui-lovelace.yaml')
         for card in cards:
             with open(lovelace_config, 'r') as local:
