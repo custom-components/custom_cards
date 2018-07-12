@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 DOMAIN = 'custom_cards'
 CONF_AUTO_UPDATE = 'auto_update'
@@ -119,7 +119,7 @@ def get_remote_version(card):
 
 def get_local_version(card, lovelace_config):
     """Return the local version if any."""
-    cardconfig = None
+    cardconfig = ''
     with open(lovelace_config, 'r') as local:
         for line in local.readlines():
             if '/' + card + '.js' in line:
