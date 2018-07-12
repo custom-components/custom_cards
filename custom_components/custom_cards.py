@@ -57,7 +57,7 @@ def setup(hass, config):
         DOMAIN, 'update_cards', update_cards_service)
     return True
 
-def _update_cards(www_dir, lovelace_config, update, auto_update, data_card):
+def _update_cards(www_dir, lovelace_config, update_type, auto_update, data_card):
     """DocString"""
     if data_card == None:
         cards = get_installed_cards(www_dir)
@@ -71,8 +71,8 @@ def _update_cards(www_dir, lovelace_config, update, auto_update, data_card):
                 if remoteversion != False:
                     if localversion != remoteversion:
                         if auto_update == 'True':
-                            update = 'manual'
-                        if update == 'manual':
+                            update_type = 'manual'
+                        if update_type == 'manual':
                             download_card(card, www_dir)
                             update_config(lovelace_config, card, localversion, remoteversion)
                             _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, localversion, remoteversion)
