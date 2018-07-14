@@ -49,19 +49,11 @@ def setup(hass, config):
     def update_cards_service(call):
         """Set up service for manual trigger."""
         controller.update_cards()
-<<<<<<< HEAD
 
     def update_card_service(call):
         """Set up service for manual trigger."""
         controller.update_card(call.data.get(ATTR_CARD))
 
-=======
-
-    def update_card_service(call):
-        """Set up service for manual trigger."""
-        controller.update_card(call.data.get(ATTR_CARD))
-
->>>>>>> 0e0aa8c1f4e0eea9a0e675b6faeaa2b456f6cb51
     track_time_interval(hass, controller.cache_versions, INTERVAL)
     hass.services.register(
         DOMAIN, 'update_cards', update_cards_service)
@@ -102,12 +94,8 @@ class CustomCards:
         for card in self.cards:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.update_card(card)
-<<<<<<< HEAD
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card)
-=======
-        async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
->>>>>>> 0e0aa8c1f4e0eea9a0e675b6faeaa2b456f6cb51
 
     def update_card(self, card):
         """Update one cards"""
@@ -115,18 +103,12 @@ class CustomCards:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.download_card(card)
                 self.update_resource_version(card)
-<<<<<<< HEAD
                 _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, self.hass.data[DATA_CC][card]['local'], self.hass.data[DATA_CC][card]['remote'])
                 self.hass.data[DATA_CC][card]['local'] = self.hass.data[DATA_CC][card]['remote']
                 self.hass.data[DATA_CC][card]['has_update'] = False
                 async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card)
-=======
-                self.hass.data[DATA_CC][card]['local'] = self.hass.data[DATA_CC][card]['remote']
-                self.hass.data[DATA_CC][card]['has_update'] = False
-                _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, self.hass.data[DATA_CC][card]['local'], self.hass.data[DATA_CC][card]['remote'])
->>>>>>> 0e0aa8c1f4e0eea9a0e675b6faeaa2b456f6cb51
         else:
             _LOGGER.warn('Upgrade failed, no valid card specified %s', card)
 
