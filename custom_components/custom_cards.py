@@ -13,12 +13,15 @@ import requests
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 __version__ = '1.1.6'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
 CONF_AUTO_UPDATE = 'auto_update'
+SIGNAL_SENSOR_UPDATE = 'custom_cards_update'
 
 ATTR_CARD = 'card'
 
@@ -60,6 +63,7 @@ def setup(hass, config):
         DOMAIN, 'update_card', update_card_service)
     hass.services.register(
         DOMAIN, 'check_versions', controller.cache_versions)
+    load_platform(hass, 'sensor', DOMAIN)
     return True
 
 
@@ -84,12 +88,14 @@ class CustomCards:
                 "remote": remoteversion,
                 "has_update": has_update,
             }
+        async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
 
     def update_cards(self):
         """Update all cards"""
         for card in self.cards:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.update_card(card)
+        async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
 
     def update_card(self, card):
         """Update one cards"""

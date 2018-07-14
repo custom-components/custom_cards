@@ -6,7 +6,8 @@ https://github.com/custom-components/sensor.custom_cards
 """
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
-from custom_components.custom_cards import DATA_CC
+from custom_components.custom_cards import DATA_CC, SIGNAL_SENSOR_UPDATE
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import custom_components.custom_cards as cc
 
 __version__ = '0.0.5'
@@ -28,10 +29,15 @@ class CustomCards(Entity):
         self._state = None
         self._attributes = self.hass.data[DATA_CC]
 
-    def update(self):
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_SENSOR_UPDATE, self._update_callback)
+
+    def _update_callback(self):
         """Method to update sensor value"""
-        self._attributes = self.hass.data[DATA_CC]
         self._state = 'Active'
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
