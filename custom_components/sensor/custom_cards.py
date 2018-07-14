@@ -37,6 +37,7 @@ class CustomCards(Entity):
     def _update_callback(self):
         """Method to update sensor value"""
         self._state = 'Active'
+        self._attributes = self.hass.data[DATA_CC]
         self.async_schedule_update_ha_state()
 
     @property

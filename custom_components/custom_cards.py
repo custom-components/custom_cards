@@ -77,6 +77,7 @@ class CustomCards:
 
     def cache_versions(self, time):
         self.cards = self.get_installed_cards()
+        self.hass.data[DATA_CC] = {} # Empty list to start from scratch
         for card in self.cards:
             localversion = self.get_local_version(card)
             remoteversion = self.get_remote_version(card)
