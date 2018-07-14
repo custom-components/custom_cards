@@ -12,7 +12,7 @@ from custom_components.custom_cards import DATA_CC, SIGNAL_SENSOR_UPDATE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import custom_components.custom_cards as cc
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 DEPENDENCIES = ['custom_cards']
 
