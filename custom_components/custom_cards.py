@@ -22,7 +22,7 @@ CONF_AUTO_UPDATE = 'auto_update'
 
 ATTR_CARD = 'card'
 
-INTERVAL = timedelta(minutes=60)
+INTERVAL = timedelta(days=1)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -58,6 +58,8 @@ def setup(hass, config):
         DOMAIN, 'update_cards', update_cards_service)
     hass.services.register(
         DOMAIN, 'update_card', update_card_service)
+    hass.services.register(
+        DOMAIN, 'check_versions', controller.cache_versions)
     return True
 
 
