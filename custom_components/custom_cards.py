@@ -38,12 +38,10 @@ _LOGGER = logging.getLogger(__name__)
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
 
-
 def setup(hass, config):
     """Set up the component."""
     _LOGGER.info('version %s is starting, if you have ANY issues with this, please report \
                   them here: https://github.com/custom-components/%s', __version__, __name__.split('.')[1])
-    auto_update = config[DOMAIN][CONF_AUTO_UPDATE]
     www_dir = str(hass.config.path("www/"))
     lovelace_config = str(hass.config.path("ui-lovelace.yaml"))
     controller = CustomCards(hass, www_dir, lovelace_config)
@@ -75,7 +73,7 @@ class CustomCards:
         self.lovelace_config = lovelace_config
         self.cards = None
         self.hass.data[DATA_CC] = {}
-        self.cache_versions(None) # Force a cache on startup
+        self.cache_versions(None) # Force a cache update on startup
 
     def cache_versions(self, time):
         self.cards = self.get_installed_cards()
