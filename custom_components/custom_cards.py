@@ -94,7 +94,8 @@ class CustomCards:
         for card in self.cards:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.update_card(card)
-        async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+            else:
+                _LOGGER.debug('Skipping upgrade for %s, no update available', card)
 
     def update_card(self, card):
         """Update one cards"""
@@ -102,9 +103,12 @@ class CustomCards:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.download_card(card)
                 self.update_resource_version(card)
+                _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, self.hass.data[DATA_CC][card]['local'], self.hass.data[DATA_CC][card]['remote'])
                 self.hass.data[DATA_CC][card]['local'] = self.hass.data[DATA_CC][card]['remote']
                 self.hass.data[DATA_CC][card]['has_update'] = False
-                _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, self.hass.data[DATA_CC][card]['local'], self.hass.data[DATA_CC][card]['remote'])
+                async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+            else:
+                _LOGGER.debug('Skipping upgrade for %s, no update available', card)
         else:
             _LOGGER.warn('Upgrade failed, no valid card specified %s', card)
 
