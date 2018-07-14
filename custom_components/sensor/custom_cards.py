@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://github.com/custom-components/sensor.custom_cards
 """
 import logging
+import time
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from custom_components.custom_cards import DATA_CC, SIGNAL_SENSOR_UPDATE
@@ -29,6 +30,7 @@ class CustomCards(Entity):
     def __init__(self, hass):
         """Initialize the sensor."""
         self.hass = hass
+        self._state = time.time()
         self._attributes = self.hass.data[DATA_CC]
 
     async def async_added_to_hass(self):
@@ -39,6 +41,7 @@ class CustomCards(Entity):
     def _update_callback(self):
         """Method to update sensor value"""
         self._attributes = self.hass.data[DATA_CC]
+        self._state = time.time()
         _LOGGER.debug('Sensor update for signal %s', self._attributes)
         self.async_schedule_update_ha_state(True)
 
@@ -50,7 +53,7 @@ class CustomCards(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return 'Active'
+        return self._state
 
     @property
     def device_state_attributes(self):
