@@ -84,7 +84,7 @@ class CustomCards:
             has_update = (localversion != False and remoteversion != False and remoteversion != localversion)
             self.hass.data[DATA_CC][card] = {
                 "local": localversion,
-                "remote": remoteversion,
+                "remote": remoteversion.strip(),
                 "has_update": has_update,
             }
         async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
@@ -124,7 +124,7 @@ class CustomCards:
     def update_resource_version(self, card):
         """Updating the ui-lovelace file"""
         localversion = self.hass.data[DATA_CC][card]['local']
-        remoteversion = self.hass.data[DATA_CC][card]['remote'].strip()
+        remoteversion = self.hass.data[DATA_CC][card]['remote']
         _LOGGER.debug('Updating configuration for %s', card)
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
