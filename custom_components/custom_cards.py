@@ -149,6 +149,7 @@ class CustomCards:
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
         subprocess.call(["sed", "-i", "-e", sedcmd, self.lovelace_config])
+        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.lovelace_config);
 
     def get_installed_cards(self):
         """Get all cards in use from the www dir"""
@@ -177,9 +178,8 @@ class CustomCards:
         remoteversion = BASE_REPO + card + '/VERSION'
         response = requests.get(remoteversion)
         if response.status_code == 200:
-            remoteversion = response.text
+            remoteversion = response.text.strip()
             _LOGGER.debug('Remote version of %s is %s', card, remoteversion)
-            remoteversion = remoteversion
         else:
             _LOGGER.debug('Could not get the remote version for %s', card)
             remoteversion = False
