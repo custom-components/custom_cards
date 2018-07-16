@@ -79,9 +79,9 @@ def setup(hass, config):
                     os.makedirs(directory)
                 with open(sensor_full_path, 'wb+') as sensorfile:
                     sensorfile.write(response.content)
-                load_platform(hass, 'sensor', DOMAIN)
             else:
                 _LOGGER.critical('Failed to download sensor from %s', SENSOR_URL)
+        load_platform(hass, 'sensor', DOMAIN)
     return True
 
 
