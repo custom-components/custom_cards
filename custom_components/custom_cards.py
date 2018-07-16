@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.7'
+__version__ = '1.1.8'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
@@ -124,11 +124,12 @@ class CustomCards:
     def update_resource_version(self, card):
         """Updating the ui-lovelace file"""
         localversion = self.hass.data[DATA_CC][card]['local']
-        remoteversion = self.hass.data[DATA_CC][card]['remote']
+        remoteversion = self.hass.data[DATA_CC][card]['remote'].strip()
         _LOGGER.debug('Updating configuration for %s', card)
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
         subprocess.call(["sed", "-i", "-e", sedcmd, self.lovelace_config])
+        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.lovelace_config);
 
     def get_installed_cards(self):
         """Get all cards in use from the www dir"""
