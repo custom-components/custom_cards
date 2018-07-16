@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.8'
+__version__ = '1.1.9'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
@@ -39,8 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
-#SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_cards/master/custom_components/sensor/custom_cards.py'
-SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/custom_cards/master/custom_components/sensor/custom_cards.py'
+SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_cards/master/custom_components/sensor/custom_cards.py'
 
 def setup(hass, config):
     """Set up the component."""
