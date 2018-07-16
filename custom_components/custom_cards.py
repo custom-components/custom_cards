@@ -21,6 +21,7 @@ __version__ = '1.1.8'
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
 CONF_AUTO_UPDATE = 'auto_update'
+CONF_HIDE_SENSOR = 'hide_sensor'
 SIGNAL_SENSOR_UPDATE = 'custom_cards_update'
 
 ATTR_CARD = 'card'
@@ -30,6 +31,7 @@ INTERVAL = timedelta(days=1)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTO_UPDATE, default=False): cv.boolean,
+        vol.Optional(CONF_HIDE_SENSOR, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
+#SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_cards/master/custom_components/sensor/custom_cards.py'
+SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/custom_cards/master/custom_components/sensor/custom_cards.py'
 
 def setup(hass, config):
     """Set up the component."""
@@ -45,6 +49,7 @@ def setup(hass, config):
     www_dir = str(hass.config.path("www/"))
     lovelace_config = str(hass.config.path("ui-lovelace.yaml"))
     controller = CustomCards(hass, www_dir, lovelace_config)
+    hide_sensor = config[DOMAIN][CONF_HIDE_SENSOR]
 
     def update_cards_service(call):
         """Set up service for manual trigger."""
@@ -61,7 +66,25 @@ def setup(hass, config):
         DOMAIN, 'update_card', update_card_service)
     hass.services.register(
         DOMAIN, 'check_versions', controller.cache_versions)
-    load_platform(hass, 'sensor', DOMAIN)
+    if not hide_sensor:
+        sensor_dir = str(hass.config.path("custom_components/sensor/"))
+        sensor_file = 'custom_cards.py'
+        sensor_full_path = sensor_dir + sensor_file
+        if not os.path.isfile(sensor_full_path):
+            _LOGGER.debug('Could not find %s in %s, trying to download.', sensor_file, sensor_dir)
+            response = requests.get(SENSOR_URL)
+            if response.status_code == 200:
+                _LOGGER.debug('Checking folder structure')
+                directory = os.path.dirname(sensor_dir)
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                with open(sensor_full_path, 'wb+') as sensorfile:
+                    sensorfile.write(response.content)
+                    _LOGGER.critical(sensorfile)
+                    _LOGGER.critical(response.content)
+                load_platform(hass, 'sensor', DOMAIN)
+            else:
+                _LOGGER.critical('Failed to download sensor from %s', SENSOR_URL)
     return True
 
 
@@ -129,7 +152,6 @@ class CustomCards:
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
         subprocess.call(["sed", "-i", "-e", sedcmd, self.lovelace_config])
-        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.lovelace_config);
 
     def get_installed_cards(self):
         """Get all cards in use from the www dir"""
@@ -158,8 +180,9 @@ class CustomCards:
         remoteversion = BASE_REPO + card + '/VERSION'
         response = requests.get(remoteversion)
         if response.status_code == 200:
-            remoteversion = response.text.strip()
+            remoteversion = response.text
             _LOGGER.debug('Remote version of %s is %s', card, remoteversion)
+            remoteversion = remoteversion
         else:
             _LOGGER.debug('Could not get the remote version for %s', card)
             remoteversion = False
