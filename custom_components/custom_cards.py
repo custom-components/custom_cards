@@ -84,7 +84,7 @@ class CustomCards:
             has_update = (localversion != False and remoteversion != False and remoteversion != localversion)
             self.hass.data[DATA_CC][card] = {
                 "local": localversion,
-                "remote": remoteversion.strip(),
+                "remote": remoteversion,
                 "has_update": has_update,
             }
         async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
@@ -158,9 +158,8 @@ class CustomCards:
         remoteversion = BASE_REPO + card + '/VERSION'
         response = requests.get(remoteversion)
         if response.status_code == 200:
-            remoteversion = response.text
+            remoteversion = response.text.strip()
             _LOGGER.debug('Remote version of %s is %s', card, remoteversion)
-            remoteversion = remoteversion
         else:
             _LOGGER.debug('Could not get the remote version for %s', card)
             remoteversion = False
