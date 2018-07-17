@@ -21,6 +21,7 @@ __version__ = '1.1.9'
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
 CONF_AUTO_UPDATE = 'auto_update'
+CONF_HIDE_SENSOR = 'hide_sensor'
 SIGNAL_SENSOR_UPDATE = 'custom_cards_update'
 
 ATTR_CARD = 'card'
@@ -30,6 +31,7 @@ INTERVAL = timedelta(days=1)
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTO_UPDATE, default=False): cv.boolean,
+        vol.Optional(CONF_HIDE_SENSOR, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,6 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
+SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_cards/master/custom_components/sensor/custom_cards.py'
 
 def setup(hass, config):
     """Set up the component."""
@@ -60,7 +63,23 @@ def setup(hass, config):
         DOMAIN, 'update_card', update_card_service)
     hass.services.register(
         DOMAIN, 'check_versions', controller.cache_versions)
-    load_platform(hass, 'sensor', DOMAIN)
+    if not hide_sensor:
+        sensor_dir = str(hass.config.path("custom_components/sensor/"))
+        sensor_file = 'custom_cards.py'
+        sensor_full_path = sensor_dir + sensor_file
+        if not os.path.isfile(sensor_full_path):
+            _LOGGER.debug('Could not find %s in %s, trying to download.', sensor_file, sensor_dir)
+            response = requests.get(SENSOR_URL)
+            if response.status_code == 200:
+                _LOGGER.debug('Checking folder structure')
+                directory = os.path.dirname(sensor_dir)
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                with open(sensor_full_path, 'wb+') as sensorfile:
+                    sensorfile.write(response.content)
+            else:
+                _LOGGER.critical('Failed to download sensor from %s', SENSOR_URL)
+        load_platform(hass, 'sensor', DOMAIN)
     return True
 
 
