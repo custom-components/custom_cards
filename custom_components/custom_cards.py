@@ -158,7 +158,7 @@ class CustomCards:
         cards = []
         cards_in_use = []
         for filenames in os.walk(self.conf_dir + '/www'):
-            for file in filenames:
+            for file in filenames[2]:
                 _LOGGER.debug(file)
                 if file.endswith(".js"):
                     cards.append(file.split('.')[0])
