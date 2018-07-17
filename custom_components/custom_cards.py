@@ -177,7 +177,7 @@ class CustomCards:
             _LOGGER.debug('No cards where found. %s', cards)
             cards_in_use = None
         return cards_in_use
-    
+
     def get_card_dir(self, card):
         """Get card dir"""
         with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
