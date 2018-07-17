@@ -117,8 +117,10 @@ class CustomCards:
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card[0])
 
-    def update_card(self, card, card_dir):
+    def update_card(self, card, card_dir=None):
         """Update one cards"""
+        if not card_dir:
+            card_dir = self.get_card_dir(card)
         if card in self.hass.data[DATA_CC]:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.download_card(card, card_dir)
@@ -167,7 +169,7 @@ class CustomCards:
                 with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
                     for line in local.readlines():
                         if '/' + card + '.js' in line:
-                            card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
+                            card_dir = self.get_card_dir(card)
                             cards_in_use.append([card, card_dir])
                             break
             _LOGGER.debug('These cards where found: %s', cards_in_use)
@@ -175,6 +177,15 @@ class CustomCards:
             _LOGGER.debug('No cards where found. %s', cards)
             cards_in_use = None
         return cards_in_use
+    
+    def get_card_dir(self, card):
+        """Get card dir"""
+        with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
+            for line in local.readlines():
+                if '/' + card + '.js' in line:
+                    card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
+                    break
+        return card_dir
 
     def get_remote_version(self, card):
         """Return the remote version if any."""
