@@ -47,6 +47,7 @@ def setup(hass, config):
                   them here: https://github.com/custom-components/%s', __version__, __name__.split('.')[1])
     conf_dir = str(hass.config.path())
     controller = CustomCards(hass, conf_dir)
+    hide_sensor = config[DOMAIN][CONF_HIDE_SENSOR]
 
     def update_cards_service(call):
         """Set up service for manual trigger."""
