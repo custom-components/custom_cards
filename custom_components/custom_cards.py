@@ -20,7 +20,6 @@ __version__ = '1.1.10'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
-CONF_AUTO_UPDATE = 'auto_update'
 CONF_HIDE_SENSOR = 'hide_sensor'
 SIGNAL_SENSOR_UPDATE = 'custom_cards_update'
 
@@ -30,7 +29,6 @@ INTERVAL = timedelta(days=1)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_AUTO_UPDATE, default=False): cv.boolean,
         vol.Optional(CONF_HIDE_SENSOR, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -44,7 +42,8 @@ SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_
 def setup(hass, config):
     """Set up the component."""
     _LOGGER.info('version %s is starting, if you have ANY issues with this, please report \
-                  them here: https://github.com/custom-components/%s', __version__, __name__.split('.')[1])
+                  them here: https://github.com/custom-components/%s',
+                 __version__, __name__.split('.')[1])
     conf_dir = str(hass.config.path())
     controller = CustomCards(hass, conf_dir)
     hide_sensor = config[DOMAIN][CONF_HIDE_SENSOR]
