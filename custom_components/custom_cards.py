@@ -16,11 +16,10 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.9'
+__version__ = '1.1.10'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
-CONF_AUTO_UPDATE = 'auto_update'
 CONF_HIDE_SENSOR = 'hide_sensor'
 SIGNAL_SENSOR_UPDATE = 'custom_cards_update'
 
@@ -30,7 +29,6 @@ INTERVAL = timedelta(days=1)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_AUTO_UPDATE, default=False): cv.boolean,
         vol.Optional(CONF_HIDE_SENSOR, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -44,7 +42,8 @@ SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_
 def setup(hass, config):
     """Set up the component."""
     _LOGGER.info('version %s is starting, if you have ANY issues with this, please report \
-                  them here: https://github.com/custom-components/%s', __version__, __name__.split('.')[1])
+                  them here: https://github.com/custom-components/%s',
+                 __version__, __name__.split('.')[1])
     conf_dir = str(hass.config.path())
     controller = CustomCards(hass, conf_dir)
     hide_sensor = config[DOMAIN][CONF_HIDE_SENSOR]
@@ -94,6 +93,7 @@ class CustomCards:
         self.cache_versions(None) # Force a cache update on startup
 
     def cache_versions(self, time):
+        """Cache"""
         self.cards = self.get_installed_cards()
         self.hass.data[DATA_CC] = {} # Empty list to start from scratch
         if self.cards:
@@ -116,8 +116,10 @@ class CustomCards:
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card[0])
 
-    def update_card(self, card, card_dir):
+    def update_card(self, card, card_dir=None):
         """Update one cards"""
+        if not card_dir:
+            card_dir = self.get_card_dir(card)
         if card in self.hass.data[DATA_CC]:
             if self.hass.data[DATA_CC][card]['has_update']:
                 self.download_card(card, card_dir)
@@ -129,7 +131,7 @@ class CustomCards:
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card)
         else:
-            _LOGGER.warn('Upgrade failed, no valid card specified %s', card)
+            _LOGGER.error('Upgrade failed, no valid card specified %s', card)
 
     def download_card(self, card, card_dir):
         """Downloading new card"""
@@ -148,15 +150,15 @@ class CustomCards:
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
         subprocess.call(["sed", "-i", "-e", sedcmd, self.conf_dir + '/ui-lovelace.yaml'])
-        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.conf_dir + '/ui-lovelace.yaml');
+        _LOGGER.debug("sed -i -e %s %s ", sedcmd, self.conf_dir + '/ui-lovelace.yaml')
 
     def get_installed_cards(self):
         """Get all cards in use from the www dir"""
         _LOGGER.debug('Checking for installed cards in  %s/www', self.conf_dir)
         cards = []
         cards_in_use = []
-        for root, directories, filenames in os.walk(self.conf_dir + '/www'):
-            for file in filenames:
+        for filenames in os.walk(self.conf_dir + '/www'):
+            for file in filenames[2]:
                 _LOGGER.debug(file)
                 if file.endswith(".js"):
                     cards.append(file.split('.')[0])
@@ -166,7 +168,7 @@ class CustomCards:
                 with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
                     for line in local.readlines():
                         if '/' + card + '.js' in line:
-                            card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
+                            card_dir = self.get_card_dir(card)
                             cards_in_use.append([card, card_dir])
                             break
             _LOGGER.debug('These cards where found: %s', cards_in_use)
@@ -174,6 +176,15 @@ class CustomCards:
             _LOGGER.debug('No cards where found. %s', cards)
             cards_in_use = None
         return cards_in_use
+
+    def get_card_dir(self, card):
+        """Get card dir"""
+        with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
+            for line in local.readlines():
+                if '/' + card + '.js' in line:
+                    card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
+                    break
+        return card_dir
 
     def get_remote_version(self, card):
         """Return the remote version if any."""
