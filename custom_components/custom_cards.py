@@ -156,7 +156,7 @@ class CustomCards:
         _LOGGER.debug('Checking for installed cards in  %s/www', self.conf_dir)
         cards = []
         cards_in_use = []
-        for root, directories, filenames in os.walk(self.conf_dir + '/www'):
+        for filenames in os.walk(self.conf_dir + '/www'):
             for file in filenames:
                 _LOGGER.debug(file)
                 if file.endswith(".js"):
