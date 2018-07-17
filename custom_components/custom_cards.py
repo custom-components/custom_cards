@@ -94,6 +94,7 @@ class CustomCards:
         self.cache_versions(None) # Force a cache update on startup
 
     def cache_versions(self, time):
+        """Cache"""
         self.cards = self.get_installed_cards()
         self.hass.data[DATA_CC] = {} # Empty list to start from scratch
         if self.cards:
