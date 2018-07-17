@@ -148,7 +148,7 @@ class CustomCards:
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
         subprocess.call(["sed", "-i", "-e", sedcmd, self.conf_dir + '/ui-lovelace.yaml'])
-        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.conf_dir + '/ui-lovelace.yaml');
+        _LOGGER.debug("sed -i -e %s %s ", sedcmd, self.conf_dir + '/ui-lovelace.yaml');
 
     def get_installed_cards(self):
         """Get all cards in use from the www dir"""
