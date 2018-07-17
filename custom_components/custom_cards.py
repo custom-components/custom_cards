@@ -90,7 +90,7 @@ class CustomCards:
                     "remote": remoteversion,
                     "has_update": has_update,
                 }
-        async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+                async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
 
     def update_cards(self):
         """Update all cards"""
