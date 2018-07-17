@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.9'
+__version__ = '1.1.10'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
