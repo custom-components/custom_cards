@@ -130,7 +130,7 @@ class CustomCards:
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card)
         else:
-            _LOGGER.warn('Upgrade failed, no valid card specified %s', card)
+            _LOGGER.error('Upgrade failed, no valid card specified %s', card)
 
     def download_card(self, card, card_dir):
         """Downloading new card"""
