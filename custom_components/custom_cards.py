@@ -42,10 +42,8 @@ def setup(hass, config):
     """Set up the component."""
     _LOGGER.info('version %s is starting, if you have ANY issues with this, please report \
                   them here: https://github.com/custom-components/%s', __version__, __name__.split('.')[1])
-    www_dir = str(hass.config.path("www/"))
     conf_dir = str(hass.config.path())
-    lovelace_config = str(hass.config.path("ui-lovelace.yaml"))
-    controller = CustomCards(hass, conf_dir, www_dir, lovelace_config)
+    controller = CustomCards(hass, conf_dir)
 
     def update_cards_service(call):
         """Set up service for manual trigger."""
@@ -68,11 +66,9 @@ def setup(hass, config):
 
 class CustomCards:
     """Custom cards controller."""
-    def __init__(self, hass, conf_dir, www_dir, lovelace_config):
+    def __init__(self, hass, conf_dir):
         self.hass = hass
-        self.www_dir = www_dir
         self.conf_dir = conf_dir
-        self.lovelace_config = lovelace_config
         self.cards = None
         self.hass.data[DATA_CC] = {}
         self.cache_versions(None) # Force a cache update on startup
@@ -131,15 +127,15 @@ class CustomCards:
         _LOGGER.debug('Updating configuration for %s', card)
         sedcmd = 's/\/'+ card + '.js?v=' + str(localversion) + '/\/'+ card + '.js?v=' + str(remoteversion) + '/'
         _LOGGER.debug('Upgrading card in config from version %s to version %s', localversion, remoteversion)
-        subprocess.call(["sed", "-i", "-e", sedcmd, self.lovelace_config])
-        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.lovelace_config);
+        subprocess.call(["sed", "-i", "-e", sedcmd, self.conf_dir + '/ui-lovelace.yaml'])
+        _LOGGER.debug("sed -i -e %s %s " , sedcmd, self.conf_dir + '/ui-lovelace.yaml');
 
     def get_installed_cards(self):
         """Get all cards in use from the www dir"""
-        _LOGGER.debug('Checking for installed cards in  %s', self.www_dir)
+        _LOGGER.debug('Checking for installed cards in  %s/www', self.conf_dir)
         cards = []
         cards_in_use = []
-        for root, directories, filenames in os.walk(self.www_dir):
+        for root, directories, filenames in os.walk(self.conf_dir + '/www'):
             for file in filenames:
                 _LOGGER.debug(file)
                 if file.endswith(".js"):
@@ -147,7 +143,7 @@ class CustomCards:
         if len(cards):
             _LOGGER.debug('Checking which cards that are in use in ui-lovelace.yaml')
             for card in cards:
-                with open(self.lovelace_config, 'r') as local:
+                with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
                     for line in local.readlines():
                         if '/' + card + '.js' in line:
                             card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
@@ -174,7 +170,7 @@ class CustomCards:
     def get_local_version(self, card):
         """Return the local version if any."""
         cardconfig = ''
-        with open(self.lovelace_config, 'r') as local:
+        with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
             for line in local.readlines():
                 if '/' + card + '.js' in line:
                     cardconfig = line
