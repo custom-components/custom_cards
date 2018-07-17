@@ -80,15 +80,16 @@ class CustomCards:
     def cache_versions(self, time):
         self.cards = self.get_installed_cards()
         self.hass.data[DATA_CC] = {} # Empty list to start from scratch
-        for card in self.cards:
-            localversion = self.get_local_version(card[0])
-            remoteversion = self.get_remote_version(card[0])
-            has_update = (localversion != False and remoteversion != False and remoteversion != localversion)
-            self.hass.data[DATA_CC][card[0]] = {
-                "local": localversion,
-                "remote": remoteversion,
-                "has_update": has_update,
-            }
+        if self.cards:
+            for card in self.cards:
+                localversion = self.get_local_version(card[0])
+                remoteversion = self.get_remote_version(card[0])
+                has_update = (localversion != False and remoteversion != False and remoteversion != localversion)
+                self.hass.data[DATA_CC][card[0]] = {
+                    "local": localversion,
+                    "remote": remoteversion,
+                    "has_update": has_update,
+                }
         async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
 
     def update_cards(self):
