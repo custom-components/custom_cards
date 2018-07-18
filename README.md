@@ -1,6 +1,6 @@
 # custom_component to update custom_cards
 
-A component which allows you to update your custom_cards automatically and monitor their versions from the UI. It exposes three services: `custom_cards.update_cards`, `custom_cards.update_card` and `custom_cards.check_versions`.
+A component which allows you to update your custom_cards automatically and monitor their versions from the UI. It exposes three services: `custom_cards.update_all`, `custom_cards.update_single` and `custom_cards.check_all`.
 
 To get the best use for this card, use together with [card-tracker](https://github.com/ciotlosm/custom-lovelace/tree/master/card-tracker)\
 **To use this card you can _NOT_ set `hide_sensor` to `true`**
@@ -9,6 +9,7 @@ To get the best use for this card, use together with [card-tracker](https://gith
 
 
 ## Installation
+
 To get started put `/custom_components/custom_cards.py`  
 here: `<config directory>/custom_components/custom_cards.py` 
 
@@ -16,7 +17,6 @@ here: `<config directory>/custom_components/custom_cards.py`
   
 | key | default | required | description
 | --- | --- | --- | ---
-| **auto_update** | False | no | Activate auto update of custom_cards, can be `True`/`False`
 | **hide_sensor** | False | no | Download and register the sensor used by the [card-tracker](https://github.com/ciotlosm/custom-lovelace/tree/master/card-tracker), can be `True`/`False`
 
 ☢️ It is strongly adviced to not have this auto update
@@ -27,8 +27,6 @@ In your `configuration.yaml`:
 
 ```yaml
 custom_cards:
-  auto_update: False
-  hide_sensor: False
 ```
 
 ℹ️ The sensor will get discovered automatically if installation was done correctly.
@@ -47,14 +45,12 @@ logger:
 
 ## Update single card
 
-You can update a single card by passing which card you want to update to the  `custom_cards.update_card` service.
+You can update a single card by passing which card you want to update to the  `custom_cards.update_single` service.
 
 ### From dev-service
 
-![singlecard](bin/single_card.png)
-
 Service:
-`custom_cards.update_card`
+`custom_cards.update_single`
 
 Service Data:
 

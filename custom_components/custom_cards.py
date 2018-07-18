@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.10'
+__version__ = '1.1.11'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
@@ -36,6 +36,7 @@ CONFIG_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
+VISIT_REPO = 'https://github.com/ciotlosm/custom-lovelace/blob/master/${elem[0]}/changelog.md'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
 SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_cards/master/custom_components/sensor/custom_cards.py'
 
@@ -48,21 +49,21 @@ def setup(hass, config):
     controller = CustomCards(hass, conf_dir)
     hide_sensor = config[DOMAIN][CONF_HIDE_SENSOR]
 
-    def update_cards_service(call):
+    def update_all_service(call):
         """Set up service for manual trigger."""
-        controller.update_cards()
+        controller.update_all()
 
-    def update_card_service(call):
+    def update_single_service(call):
         """Set up service for manual trigger."""
-        controller.update_card(call.data.get(ATTR_CARD))
+        controller.update_single(call.data.get(ATTR_CARD))
 
     track_time_interval(hass, controller.cache_versions, INTERVAL)
     hass.services.register(
-        DOMAIN, 'update_cards', update_cards_service)
+        DOMAIN, 'update_all', update_all_service)
     hass.services.register(
-        DOMAIN, 'update_card', update_card_service)
+        DOMAIN, 'update_single', update_single_service)
     hass.services.register(
-        DOMAIN, 'check_versions', controller.cache_versions)
+        DOMAIN, 'check_all', controller.cache_versions)
     if not hide_sensor:
         sensor_dir = str(hass.config.path("custom_components/sensor/"))
         sensor_file = 'custom_cards.py'
@@ -106,17 +107,19 @@ class CustomCards:
                     "remote": remoteversion,
                     "has_update": has_update,
                 }
-            async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+                self.hass.data[DATA_CC]['domain'] = DOMAIN
+                self.hass.data[DATA_CC]['repo'] = VISIT_REPO
+                async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
 
-    def update_cards(self):
+    def update_all(self):
         """Update all cards"""
         for card in self.cards:
             if self.hass.data[DATA_CC][card[0]]['has_update']:
-                self.update_card(card[0], card[1])
+                self.update_single(card[0], card[1])
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card[0])
 
-    def update_card(self, card, card_dir=None):
+    def update_single(self, card, card_dir=None):
         """Update one cards"""
         if not card_dir:
             card_dir = self.get_card_dir(card)
@@ -183,6 +186,7 @@ class CustomCards:
             for line in local.readlines():
                 if '/' + card + '.js' in line:
                     card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
+                    _LOGGER.debug('Found path "%s" for card "%s"', card_dir, card)
                     break
         return card_dir
 
