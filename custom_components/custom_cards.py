@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.12'
+__version__ = '1.1.13'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
@@ -109,7 +109,7 @@ class CustomCards:
                 }
                 self.hass.data[DATA_CC]['domain'] = DOMAIN
                 self.hass.data[DATA_CC]['repo'] = VISIT_REPO
-                async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+            async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
 
     def update_all(self):
         """Update all cards"""
