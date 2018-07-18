@@ -16,7 +16,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.13'
+__version__ = '1.1.14'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
@@ -185,7 +185,7 @@ class CustomCards:
         with open(self.conf_dir + '/ui-lovelace.yaml', 'r') as local:
             for line in local.readlines():
                 if '/' + card + '.js' in line:
-                    card_dir = line.split(': ')[1].split(card)[0].replace("local", "www")
+                    card_dir = line.split(': ')[1].split(card + '.js')[0].replace("local", "www")
                     _LOGGER.debug('Found path "%s" for card "%s"', card_dir, card)
                     break
         return card_dir
