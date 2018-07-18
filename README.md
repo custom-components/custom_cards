@@ -2,7 +2,7 @@
 
 A component which allows you to update your custom_cards automatically and monitor their versions from the UI. It exposes three services: `custom_cards.update_all`, `custom_cards.update_single` and `custom_cards.check_all`.
 
-To get the best use for this card, use together with [card-tracker](https://github.com/ciotlosm/custom-lovelace/tree/master/card-tracker)\
+To get the best use for this card, use together with [tracker-card](https://github.com/ciotlosm/custom-lovelace/tree/master/tracker-card)\
 **To use this card you can _NOT_ set `hide_sensor` to `true`**
 
 ⚠️ For now this wil ONLY work if your cards if from https://github.com/ciotlosm/custom-lovelace
@@ -17,7 +17,7 @@ here: `<config directory>/custom_components/custom_cards.py`
   
 | key | default | required | description
 | --- | --- | --- | ---
-| **hide_sensor** | False | no | Download and register the sensor used by the [card-tracker](https://github.com/ciotlosm/custom-lovelace/tree/master/card-tracker), can be `True`/`False`
+| **hide_sensor** | False | no | Download and register the sensor used by the [tracker-card](https://github.com/ciotlosm/custom-lovelace/tree/master/tracker-card), can be `True`/`False`
 
 ☢️ It is strongly adviced to not have this auto update
 
