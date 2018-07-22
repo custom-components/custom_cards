@@ -15,6 +15,7 @@ from homeassistant.helpers.event import track_time_interval
 
 __version__ = '2.1.0'
 
+
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
 
@@ -28,6 +29,7 @@ BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 VISIT_REPO = 'https://github.com/ciotlosm/custom-lovelace/blob/master/%s/changelog.md'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
 VERSION_URL = 'https://raw.githubusercontent.com/custom-cards/information/master/repos.json'
+
 
 def setup(hass, config):
     """Set up the component."""
