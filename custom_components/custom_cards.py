@@ -8,37 +8,25 @@ import logging
 import os
 import subprocess
 from datetime import timedelta
+import time
 
 import requests
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-__version__ = '1.1.14'
+__version__ = '2.0.0'
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
-CONF_HIDE_SENSOR = 'hide_sensor'
-SIGNAL_SENSOR_UPDATE = 'custom_cards_update'
 
 ATTR_CARD = 'card'
 
 INTERVAL = timedelta(days=1)
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HIDE_SENSOR, default=False): cv.boolean,
-    })
-}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 VISIT_REPO = 'https://github.com/ciotlosm/custom-lovelace/blob/master/%s/changelog.md'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
-SENSOR_URL = 'https://raw.githubusercontent.com/custom-components/sensor.custom_cards/master/custom_components/sensor/custom_cards.py'
 
 def setup(hass, config):
     """Set up the component."""
@@ -47,7 +35,6 @@ def setup(hass, config):
                  __version__, __name__.split('.')[1])
     conf_dir = str(hass.config.path())
     controller = CustomCards(hass, conf_dir)
-    hide_sensor = config[DOMAIN][CONF_HIDE_SENSOR]
 
     def update_all_service(call):
         """Set up service for manual trigger."""
@@ -64,23 +51,6 @@ def setup(hass, config):
         DOMAIN, 'update_single', update_single_service)
     hass.services.register(
         DOMAIN, 'check_all', controller.cache_versions)
-    if not hide_sensor:
-        sensor_dir = str(hass.config.path("custom_components/sensor/"))
-        sensor_file = 'custom_cards.py'
-        sensor_full_path = sensor_dir + sensor_file
-        if not os.path.isfile(sensor_full_path):
-            _LOGGER.debug('Could not find %s in %s, trying to download.', sensor_file, sensor_dir)
-            response = requests.get(SENSOR_URL)
-            if response.status_code == 200:
-                _LOGGER.debug('Checking folder structure')
-                directory = os.path.dirname(sensor_dir)
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-                with open(sensor_full_path, 'wb+') as sensorfile:
-                    sensorfile.write(response.content)
-            else:
-                _LOGGER.critical('Failed to download sensor from %s', SENSOR_URL)
-        load_platform(hass, 'sensor', DOMAIN)
     return True
 
 
@@ -93,7 +63,7 @@ class CustomCards:
         self.hass.data[DATA_CC] = {}
         self.cache_versions(None) # Force a cache update on startup
 
-    def cache_versions(self, time):
+    def cache_versions(self, call):
         """Cache"""
         self.cards = self.get_installed_cards()
         self.hass.data[DATA_CC] = {} # Empty list to start from scratch
@@ -102,14 +72,17 @@ class CustomCards:
                 localversion = self.get_local_version(card[0])
                 remoteversion = self.get_remote_version(card[0])
                 has_update = (localversion != False and remoteversion != False and remoteversion != localversion)
+                not_local = (remoteversion != False and not localversion)
                 self.hass.data[DATA_CC][card[0]] = {
                     "local": localversion,
                     "remote": remoteversion,
                     "has_update": has_update,
+                    "not_local": not_local,
                 }
                 self.hass.data[DATA_CC]['domain'] = DOMAIN
                 self.hass.data[DATA_CC]['repo'] = VISIT_REPO
-            async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+            self.hass.states.set('sensor.custom_card_tracker', time.time(), self.hass.data[DATA_CC])
+
 
     def update_all(self):
         """Update all cards"""
@@ -130,7 +103,7 @@ class CustomCards:
                 _LOGGER.info('Upgrade of %s from version %s to version %s complete', card, self.hass.data[DATA_CC][card]['local'], self.hass.data[DATA_CC][card]['remote'])
                 self.hass.data[DATA_CC][card]['local'] = self.hass.data[DATA_CC][card]['remote']
                 self.hass.data[DATA_CC][card]['has_update'] = False
-                async_dispatcher_send(self.hass, SIGNAL_SENSOR_UPDATE)
+                self.hass.states.set('sensor.custom_card_tracker', time.time(), self.hass.data[DATA_CC])
             else:
                 _LOGGER.debug('Skipping upgrade for %s, no update available', card)
         else:
