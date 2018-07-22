@@ -3,7 +3,6 @@
 A component which allows you to update your custom_cards automatically and monitor their versions from the UI. It exposes three services: `custom_cards.update_all`, `custom_cards.update_single` and `custom_cards.check_all`.
 
 To get the best use for this card, use together with [tracker-card](https://github.com/ciotlosm/custom-lovelace/tree/master/tracker-card)\
-**To use this card you can _NOT_ set `hide_sensor` to `true`**
 
 ⚠️ This wil ONLY work if your cards if from:
 

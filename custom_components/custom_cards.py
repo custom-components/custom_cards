@@ -15,7 +15,6 @@ from homeassistant.helpers.event import track_time_interval
 
 __version__ = '2.1.0'
 
-
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
 
