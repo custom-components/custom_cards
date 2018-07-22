@@ -5,7 +5,10 @@ A component which allows you to update your custom_cards automatically and monit
 To get the best use for this card, use together with [tracker-card](https://github.com/ciotlosm/custom-lovelace/tree/master/tracker-card)\
 **To use this card you can _NOT_ set `hide_sensor` to `true`**
 
-⚠️ For now this wil ONLY work if your cards if from https://github.com/ciotlosm/custom-lovelace
+⚠️ This wil ONLY work if your cards if from:
+
+- https://github.com/ciotlosm/custom-lovelace
+- https://github.com/custom-cards
 
 
 ## Installation
