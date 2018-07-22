@@ -13,23 +13,13 @@ To get the best use for this card, use together with [tracker-card](https://gith
 To get started put `/custom_components/custom_cards.py`  
 here: `<config directory>/custom_components/custom_cards.py` 
 
-## Configuration
-  
-| key | default | required | description
-| --- | --- | --- | ---
-| **hide_sensor** | False | no | Download and register the sensor used by the [tracker-card](https://github.com/ciotlosm/custom-lovelace/tree/master/tracker-card), can be `True`/`False`
-
-☢️ It is strongly adviced to not have this auto update
-
-## Example
+## Example configuration
 
 In your `configuration.yaml`:
 
 ```yaml
 custom_cards:
 ```
-
-ℹ️ The sensor will get discovered automatically if installation was done correctly.
 
 ## Debug logging
 
@@ -40,7 +30,6 @@ logger:
   default: warn
   logs:
     custom_components.custom_cards: debug
-    custom_components.sensor.custom_cards: debug
 ```
 
 ## Update single card
