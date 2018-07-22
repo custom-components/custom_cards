@@ -13,7 +13,8 @@ import time
 import requests
 from homeassistant.helpers.event import track_time_interval
 
-__version__ = '2.0.0'
+__version__ = '2.1.0'
+
 
 DOMAIN = 'custom_cards'
 DATA_CC = 'custom_cards_data'
@@ -27,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 BROWSE_REPO = 'https//github.com/ciotlosm/custom-lovelace/master/'
 VISIT_REPO = 'https://github.com/ciotlosm/custom-lovelace/blob/master/%s/changelog.md'
 BASE_REPO = 'https://raw.githubusercontent.com/ciotlosm/custom-lovelace/master/'
+VERSION_URL = 'https://raw.githubusercontent.com/custom-cards/information/master/repos.json'
+
 
 def setup(hass, config):
     """Set up the component."""
@@ -112,11 +115,13 @@ class CustomCards:
     def download_card(self, card, card_dir):
         """Downloading new card"""
         _LOGGER.debug('Downloading new version of %s', card)
-        downloadurl = BASE_REPO + card + '/' + card + '.js'
-        response = requests.get(downloadurl)
+        response = requests.get(VERSION_URL)
         if response.status_code == 200:
-            with open(self.conf_dir + card_dir + card + '.js', 'wb') as card_file:
-                card_file.write(response.content)
+            downloadurl = response.json()[card]['remote_location']
+            download = requests.get(downloadurl)
+            if download.status_code == 200:
+                with open(self.conf_dir + card_dir + card + '.js', 'wb') as card_file:
+                    card_file.write(download.content)
 
     def update_resource_version(self, card):
         """Updating the ui-lovelace file"""
@@ -165,10 +170,9 @@ class CustomCards:
 
     def get_remote_version(self, card):
         """Return the remote version if any."""
-        remoteversion = BASE_REPO + card + '/VERSION'
-        response = requests.get(remoteversion)
+        response = requests.get(VERSION_URL)
         if response.status_code == 200:
-            remoteversion = response.text.strip()
+            remoteversion = response.json()[card]['version']
             _LOGGER.debug('Remote version of %s is %s', card, remoteversion)
         else:
             _LOGGER.debug('Could not get the remote version for %s', card)
@@ -189,3 +193,15 @@ class CustomCards:
             return localversion
         _LOGGER.debug('Could not get the local version for %s', card)
         return False
+
+    def get_cards(self):
+        """Get all available cards"""
+        cards = []
+        response = requests.get(VERSION_URL)
+        if response.status_code == 200:
+            for card in response.json():
+                cards.append(card)
+        else:
+            _LOGGER.debug('Could not reach the remote repo')
+        _LOGGER.debug(cards)
+        return cards
